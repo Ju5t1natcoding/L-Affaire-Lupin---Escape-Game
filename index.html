@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>L’Affaire Lupin – Escape Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,500;0,700;1,500&family=Spectral:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#e6eaee; --surface:#f7f8f9; --ink:#1b2438; --muted:#55607a;
+  --gold:#9a6b14; --gold-soft:#e8d6ae; --line:#c3cad6; --ok:#2f6b3f; --err:#9b2c2c;
+  --serif-d:"Bodoni Moda", Didot, "Times New Roman", serif;
+  --serif:"Spectral", Georgia, "Times New Roman", serif;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#10172a; --surface:#18213a; --ink:#e9e4d6; --muted:#a3a9bb;
+    --gold:#e2b04f; --gold-soft:#3a3320; --line:#2e3a58; --ok:#7fc690; --err:#f08b8b;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10172a; --surface:#18213a; --ink:#e9e4d6; --muted:#a3a9bb;
+  --gold:#e2b04f; --gold-soft:#3a3320; --line:#2e3a58; --ok:#7fc690; --err:#f08b8b;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--serif);font-size:1.125rem;line-height:1.65}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.bar{max-width:760px;margin:0 auto;padding:.7rem 1.25rem;display:flex;align-items:center;gap:1rem;justify-content:space-between}
+.brand{font-family:var(--serif-d);font-style:italic;font-size:1.15rem}
+.steps{display:flex;gap:.4rem}
+.steps span{width:.6rem;height:.6rem;border-radius:50%;border:1.5px solid var(--gold)}
+.steps span.done{background:var(--gold)}
+.clock{font-family:var(--serif-d);font-size:1.5rem;font-variant-numeric:tabular-nums;color:var(--gold)}
+.clock.low{color:var(--err)}
+main{max-width:760px;margin:0 auto;padding:2rem 1.25rem 4rem}
+h1{font-family:var(--serif-d);font-weight:700;font-size:clamp(2.6rem,9vw,4.6rem);line-height:1;margin:.5rem 0 1.5rem;letter-spacing:-.01em}
+h2{font-family:var(--serif-d);font-weight:500;font-size:clamp(1.7rem,5vw,2.3rem);line-height:1.15;margin:.2rem 0 1rem}
+.num{font-family:var(--serif-d);font-style:italic;color:var(--gold);font-size:1.05rem}
+p{max-width:62ch;margin:0 0 1rem}
+.letter{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--gold);padding:1.2rem 1.4rem;margin:1.2rem 0 1.6rem;font-style:italic}
+.letter p:last-child{margin:0;text-align:right;font-style:normal;font-family:var(--serif-d)}
+button,input{font:inherit;color:inherit}
+.btn{background:var(--ink);color:var(--bg);border:0;padding:.7rem 1.4rem;border-radius:3px;cursor:pointer;font-weight:600}
+.btn:hover{opacity:.88}
+.ghost{background:none;border:1px solid var(--line);color:var(--muted);padding:.6rem 1rem;border-radius:3px;cursor:pointer;font-size:.95rem}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-top:1rem}
+.code{background:var(--surface);border:1px solid var(--line);border-radius:3px;padding:.65rem .9rem;min-width:0;flex:1 1 14rem;font-size:1.15rem}
+.msg{min-height:1.6rem;margin-top:.8rem;font-weight:600}
+.msg.ok{color:var(--ok)} .msg.err{color:var(--err)}
+.hint{color:var(--muted);font-style:italic;margin-top:.6rem}
+.sent{background:var(--surface);border:1px solid var(--line);padding:.9rem 1rem;margin:.6rem 0;border-radius:3px}
+.opts{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem}
+.opt{background:none;border:1px solid var(--line);padding:.35rem .8rem;border-radius:3px;cursor:pointer}
+.opt.sel{border-color:var(--gold);background:var(--gold-soft)}
+.opt small{color:var(--gold);font-family:var(--serif-d);margin-left:.4rem}
+.slots{display:flex;gap:.4rem;margin:1rem 0}
+.slots b{width:2.4rem;height:2.8rem;border-bottom:2px solid var(--gold);display:grid;place-items:center;font-family:var(--serif-d);font-size:1.5rem}
+.map{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:1rem 0;max-width:520px}
+.cell{aspect-ratio:1;background:var(--surface);border:1px solid var(--line);border-radius:3px;cursor:pointer;font-size:clamp(.62rem,2.4vw,.82rem);line-height:1.15;padding:.2rem;display:grid;place-items:center;text-align:center}
+.cell:hover{border-color:var(--gold)}
+.cell.start{background:var(--gold-soft);cursor:default;font-weight:600}
+.compass{font-size:.9rem;color:var(--muted)}
+.sus{display:grid;gap:.6rem;margin:1rem 0}
+.sus button{text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:3px;padding:.9rem 1rem;cursor:pointer}
+.sus button:hover{border-color:var(--gold)}
+.sus strong{font-family:var(--serif-d);display:block;margin-bottom:.2rem}
+.big{font-family:var(--serif-d);font-size:3rem;color:var(--gold);margin:.5rem 0 1rem}
+.hidden{display:none}
+@media (prefers-reduced-motion:no-preference){ .screen{animation:in .4s ease} @keyframes in{from{opacity:0}to{opacity:1}} }
+</style>
+</head>
+<body>
+<header><div class="bar">
+  <span class="brand">L’Affaire Lupin</span>
+  <div class="steps" id="steps" aria-label="Progression"></div>
+  <span class="clock" id="clock">30:00</span>
+</div></header>
+<main id="app"></main>
+
+<script>
+const TOTAL = 30*60, PENALTY = 120;
+let left = TOTAL, idx = -1, timer = null, hints = 0;
+const app = document.getElementById('app');
+const norm = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/^(la |le |les |l’|l')/,'').replace(/[^a-z0-9]/g,'');
+
+const puzzles = [
+ { title:"Le coffre de Lupin", body:`
+   <p>Vous êtes dans le bureau secret de Lupin. Sur la table, il y a un coffre fermé avec un code à quatre chiffres. À côté, une carte de visite :</p>
+   <div class="letter"><p>« Mon cher Ganimard, vous cherchez le code de mon coffre ? C’est facile : d’abord quatre-vingt-dix-sept, ensuite soixante-quatorze. Bonne chance ! »</p><p>A. L.</p></div>
+   ${inputRow('Code à 4 chiffres')}`,
+   answer:["9774"], hint:"Quatre-vingt-dix-sept = 4 × 20 + 17. Soixante-quatorze = 60 + 14.",
+   clue:"Dans le coffre, vous trouvez le journal de Lupin." },
+
+ { title:"Le journal de Lupin", body:`
+   <p>Le journal raconte le vol, mais l’encre a coulé. Choisissez la bonne forme du verbe : chaque réponse donne une lettre. Les lettres forment le nom de l’endroit où Lupin cache le tableau.</p>
+   <div id="journal"></div>
+   <div class="slots" id="slots"></div>
+   <button class="btn" id="checkJ">Vérifier</button>`,
+   custom:true, answer:["seine"], hint:"Imparfait pour la description et le décor, passé composé pour les actions ponctuelles.",
+   clue:"Le tableau est caché près de la Seine. Il faut trouver la planque exacte." },
+
+ { title:"La planque près de la Seine", body:`
+   <p>Un plan de Lupin indique le chemin depuis le Pont Neuf (★). Suivez les instructions et cliquez sur le bâtiment où vous arrivez.</p>
+   <div class="letter"><p>« Pars du pont et va tout droit vers le nord pendant trois rues. Ensuite, tourne à droite et continue deux rues. Enfin, tourne à gauche et avance encore d’une rue. Tu es arrivé ! »</p><p>A. L.</p></div>
+   <p class="compass">↑ Nord en haut du plan</p>
+   <div class="map" id="map"></div>`,
+   custom:true, hint:"Après « tourne à droite », vous allez vers l’est. Après « tourne à gauche », vous allez de nouveau vers le nord.",
+   clue:"Le Café des Artistes est vide… mais quatre témoins ont vu quelqu’un sortir avec un grand paquet." },
+
+ { title:"Les témoins", body:`
+   <p>Quatre personnes étaient au café. Lupin est un maître du déguisement : il se cache parmi elles. Mais il a un défaut : quand il ment, il fait une faute de grammaire. Qui est Lupin ?</p>
+   <div class="sus" id="sus"></div>`,
+   custom:true, hint:"Après « si », on n’utilise jamais le conditionnel. La bonne structure : si + imparfait, conditionnel.",
+   clue:"Le faux comte s’enfuit, mais il laisse tomber une dernière devinette." },
+
+ { title:"La dernière devinette", body:`
+   <p>Dans la poche du faux comte, vous trouvez ce papier. La réponse est l’endroit où Lupin va s’enfuir. Vite !</p>
+   <div class="letter"><p>« C’est un monument que tout le monde connaît, qui mesure 330 mètres, où les touristes montent chaque jour, et dont le père est un ingénieur célèbre. »</p><p>A. L.</p></div>
+   ${inputRow('Nom du monument')}`,
+   answer:["toureiffel","eiffel"], hint:"L’ingénieur s’appelle Gustave Eiffel.", clue:"" }
+];
+
+function inputRow(ph){ return `<div class="row"><input class="code" id="ans" placeholder="${ph}" autocomplete="off"><button class="btn" id="go">Valider</button></div>`; }
+
+function steps(){
+  document.getElementById('steps').innerHTML = puzzles.map((_,i)=>`<span class="${i<idx?'done':''}"></span>`).join('');
+}
+function fmt(s){ return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); }
+function tick(){
+  left = Math.max(0,left-1);
+  const c = document.getElementById('clock'); c.textContent = fmt(left); c.classList.toggle('low', left<300);
+  if(left===0){ clearInterval(timer); lose(); }
+}
+
+function intro(){
+  app.innerHTML = `<section class="screen">
+   <h1>L’Affaire Lupin</h1>
+   <p>Paris, 1907. Cette nuit, la Joconde a disparu du Louvre. Sur le mur, une seule signature : <em>Arsène Lupin</em>.</p>
+   <div class="letter"><p>« Inspecteurs, vous êtes notre dernier espoir. Lupin quitte Paris dans trente minutes. Suivez ses indices, retrouvez le tableau et arrêtez-le. Chaque indice demandé coûte deux minutes. »</p><p>Inspecteur Ganimard</p></div>
+   <button class="btn" id="start">Commencer l’enquête</button></section>`;
+  document.getElementById('start').onclick = () => { timer = setInterval(tick,1000); next(); };
+}
+
+function next(){
+  idx++; steps(); window.scrollTo(0,0);
+  if(idx>=puzzles.length) return win();
+  const p = puzzles[idx];
+  app.innerHTML = `<section class="screen"><span class="num">Énigme ${idx+1} sur ${puzzles.length}</span><h2>${p.title}</h2>${p.body}
+    <div class="msg" id="msg"></div>
+    <div class="row"><button class="ghost" id="hintBtn">Demander un indice (−2 min)</button></div>
+    <p class="hint hidden" id="hint">${p.hint}</p></section>`;
+  document.getElementById('hintBtn').onclick = e => {
+    if(!document.getElementById('hint').classList.contains('hidden')) return;
+    left = Math.max(0,left-PENALTY); hints++; document.getElementById('hint').classList.remove('hidden'); e.target.disabled = true;
+  };
+  if(!p.custom){
+    const go = () => check(norm(document.getElementById('ans').value));
+    document.getElementById('go').onclick = go;
+    document.getElementById('ans').onkeydown = e => { if(e.key==='Enter') go(); };
+    document.getElementById('ans').focus();
+  }
+  if(idx===1) journal();
+  if(idx===2) map();
+  if(idx===3) suspects();
+}
+
+function check(v){ v===undefined ? fail() : (puzzles[idx].answer.includes(v) ? success() : fail()); }
+function fail(t){ const m=document.getElementById('msg'); m.className='msg err'; m.textContent = t || 'Ce n’est pas ça. Réessayez.'; }
+function success(){
+  const m=document.getElementById('msg'); m.className='msg ok'; m.textContent='Bravo ! '+puzzles[idx].clue;
+  app.querySelectorAll('button:not(#cont), input').forEach(b=>b.disabled=true);
+  const b=document.createElement('button'); b.className='btn'; b.id='cont'; b.textContent='Continuer'; b.style.marginTop='1rem'; b.onclick=next;
+  m.after(b); b.focus();
+}
+
+function journal(){
+  const S = [
+    ["Hier soir, il", "pleuvoir", ["a plu","U"], ["pleuvait","S"], " sur Paris."],
+    ["Les gardiens du musée", "dormir", ["dormaient","E"], ["ont dormi","A"], " tranquillement."],
+    ["Soudain, j’", "entrer", ["entrais","O"], ["suis entré","I"], " dans la salle."],
+    ["J’", "prendre", ["ai pris","N"], ["prenais","R"], " le tableau en trente secondes."],
+    ["Personne ne m’a vu pendant que je", "sortir", ["suis sorti","T"], ["sortais","E"], "."]
+  ];
+  const pick = Array(S.length).fill('');
+  const J = document.getElementById('journal'), sl = document.getElementById('slots');
+  const draw = () => sl.innerHTML = pick.map(l=>`<b>${l}</b>`).join('');
+  J.innerHTML = S.map((s,i)=>`<div class="sent">${s[0]} ___ ${s[4]} <em>(${s[1]})</em><div class="opts">
+     <button class="opt" data-i="${i}" data-l="${s[2][1]}">${s[2][0]}<small>${s[2][1]}</small></button>
+     <button class="opt" data-i="${i}" data-l="${s[3][1]}">${s[3][0]}<small>${s[3][1]}</small></button></div></div>`).join('');
+  J.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.i; pick[i]=b.dataset.l;
+    J.querySelectorAll(`.opt[data-i="${i}"]`).forEach(x=>x.classList.toggle('sel',x===b)); draw();
+  });
+  draw();
+  document.getElementById('checkJ').onclick = () => pick.includes('') ? fail('Choisissez une forme pour chaque phrase.') : check(pick.join('').toLowerCase());
+}
+
+function map(){
+  const B = [
+    ["Gare du Nord","Théâtre","Musée d’Orsay","Café des Artistes","Pharmacie"],
+    ["Hôtel Royal","Banque","École","Librairie","Boulangerie"],
+    ["Cinéma","Poste","Église","Marché","Fleuriste"],
+    ["Opéra","Restaurant","Parc","Bibliothèque","Hôpital"],
+    ["Quai","★ Pont Neuf","Musée du Louvre","Bateau-mouche","Commissariat"]
+  ];
+  const M = document.getElementById('map');
+  B.forEach((row,r)=>row.forEach((name,c)=>{
+    const d=document.createElement('button'); d.className='cell'+(r===4&&c===1?' start':''); d.textContent=name;
+    if(r===4&&c===1){ d.disabled=true; }
+    else d.onclick = () => (r===0&&c===3) ? success() : fail('Lupin n’est pas ici. Relisez les instructions.');
+    M.appendChild(d);
+  }));
+}
+
+function suspects(){
+  const P = [
+    ["Madame Dubois","« Si j’avais une voiture, je partirais en vacances loin de Paris. »",false],
+    ["Le comte de Moreau","« Si je serais un voleur, je prendrais seulement les bijoux. »",true],
+    ["Monsieur Leroy","« Si je voyais Lupin, je crierais pour appeler la police. »",false],
+    ["Mademoiselle Petit","« Si le musée était ouvert la nuit, je le visiterais tous les soirs. »",false]
+  ];
+  document.getElementById('sus').innerHTML = P.map((p,i)=>`<button data-i="${i}"><strong>${p[0]}</strong>${p[1]}</button>`).join('');
+  document.querySelectorAll('#sus button').forEach(b=>b.onclick=()=> P[+b.dataset.i][2] ? success() : fail('Cette personne parle parfaitement. Ce n’est pas Lupin.'));
+}
+
+function win(){
+  clearInterval(timer);
+  app.innerHTML = `<section class="screen"><h1>Affaire résolue</h1>
+   <p>Au sommet de la tour Eiffel, vous trouvez la Joconde, intacte. Lupin, lui, a disparu… mais il a laissé une carte : « Bravo, inspecteurs. À bientôt ! »</p>
+   <p class="big">${fmt(TOTAL-left)}</p>
+   <p>Temps de l’enquête, avec ${hints} indice${hints===1?'':'s'} demandé${hints===1?'':'s'}.</p>
+   <button class="btn" onclick="location.reload()">Rejouer</button></section>`;
+}
+function lose(){
+  app.innerHTML = `<section class="screen"><h1>Trop tard</h1>
+   <p>Le train de Lupin a quitté la gare avec la Joconde. Il vous reste une chance de prendre votre revanche.</p>
+   <button class="btn" onclick="location.reload()">Recommencer l’enquête</button></section>`;
+}
+
+steps(); intro();
+</script>
+</body>
+</html>
